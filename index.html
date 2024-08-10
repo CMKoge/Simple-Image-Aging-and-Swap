@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Image Aging and Swap</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .response {
+            margin-top: 20px;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+
+        img {
+            margin-top: 20px;
+            max-width: 100%;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Simple Image Aging and Swap</h2>
+    <div class="form-group">
+        <label for="imageUrl">Image URL:</label>
+        <input type="text" id="imageUrl" placeholder="Enter image URL here">
+    </div>
+    <div class="form-group">
+        <label for="targetImageUrl">Target Image URL:</label>
+        <input type="text" id="targetImageUrl" placeholder="Enter target image URL here">
+    </div>
+    <button class="btn" onclick="callMagicApi()">Submit</button>
+
+    <div id="response" class="response"></div>
+    <img id="resultImage" src="" alt="Processed Image">
+
+    <p>
+    <Span>Demo Image Link: <a href="#" target="_blank">#</a></Span>
+    <br>
+    <Span>Demo Target Link: <a href="#" target="_blank">#</a></Span>
+    </p>
+</div>
+
+<script>
+    function callMagicApi() {
+        const imageUrl = document.getElementById('imageUrl').value;
+        const apiKey = 'API_KEY'; // Replace 'API_KEY' with your actual API key
+
+        const data = {
+            image: imageUrl,
+            target_age: "30"
+        };
+
+        fetch('https://api.magicapi.dev/api/v1/magicapi/period/period', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'x-magicapi-key': apiKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('response').textContent = 'Request ID: ' + data.request_id;
+            // Delay calling the second API
+            document.getElementById('response').textContent += '\nCalling Aging API...';
+            setTimeout(() => fetchPrediction(data.request_id, apiKey), 60000); // 60-second delay
+        })
+        .catch(error => {
+            document.getElementById('response').textContent = 'Error: ' + error;
+        });
+    }
+
+    function fetchPrediction(requestId, apiKey) {
+        fetch(`https://api.magicapi.dev/api/v1/magicapi/period/predictions/${requestId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'x-magicapi-key': apiKey
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'succeeded') {
+                document.getElementById('response').textContent += '\nStatus: ' + data.status;
+                document.getElementById('resultImage').src = data.result;
+                document.getElementById('resultImage').alt = 'Processed Image';
+                // Call third API
+                setTimeout(() => performFaceSwap(data.result, apiKey), 10000); // 10-second delay
+            } else {
+                document.getElementById('response').textContent = 'Aging API Error: ' + data.message;
+            }
+        })
+        .catch(error => {
+            document.getElementById('response').textContent = 'Error: ' + error;
+        });
+    }
+
+    function performFaceSwap(swapImageUrl, apiKey) {
+        const targetImageUrl = document.getElementById('targetImageUrl').value; // Get target image URL from the input field
+        const data = {
+            input: {
+                swap_image: swapImageUrl,
+                target_image: targetImageUrl
+            }
+        };
+
+        fetch('https://api.magicapi.dev/api/v1/magicapi/faceswap/faceswap-image', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'x-magicapi-key': apiKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('response').textContent += '\nRequest ID: ' + data.request_id;
+            // Fetch face swap result
+            document.getElementById('response').textContent += '\nCalling Swap API...';
+            setTimeout(() => fetchFaceSwapResult(data.request_id, apiKey), 60000); // Delay for processing
+        })
+        .catch(error => {
+            document.getElementById('response').textContent = 'Error: ' + error;
+        });
+    }
+
+    function fetchFaceSwapResult(requestId, apiKey) {
+        const data = {
+            request_id: requestId
+        };
+
+        fetch('https://api.magicapi.dev/api/v1/magicapi/faceswap/result', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'x-magicapi-key': apiKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('response').textContent += '\nSwap Result: ' + data.output;
+            document.getElementById('resultImage').src = data.output;
+            document.getElementById('resultImage').alt = 'Final Processed Image';
+        })
+        .catch(error => {
+            document.getElementById('response').textContent = 'Swap API Error: ' + error;
+        });
+    }
+</script>
+
+</body>
+</html>
