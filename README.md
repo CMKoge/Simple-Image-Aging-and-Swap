@@ -18,13 +18,10 @@ This app integrates with the following APIs:
 ### Important Notes
 
 - The developer of this app has no affiliation with Magic API. This app is purely a wrapper around their APIs.
-- This wrapper is meant for educational and fun purposes only. **Do not use it for NSFW or any illegal activities**.
+- This wrapper is meant for educational and fun purposes only. **Do not use it for NSFW or any illegal or harmful activities**.
 - If this wrapper is used for any inappropriate activities, the developer **will not be held responsible**.
 
 ## License
 
 This wrapper is licensed under the MIT License, allowing you to use, modify, and distribute it with proper attribution.
 
----
-
-**Simple Image Aging and Swap** - Empowering your images with AI, responsibly.
